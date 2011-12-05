@@ -1,4 +1,4 @@
-package pro5;
+package pro4;
 
 import java.io.FileReader;
 import java.util.Scanner;
@@ -10,7 +10,7 @@ import java.util.Scanner;
 public class run {
     private static FileReader fileReader = null;
     private static Scanner scanner = null;
-    private static Item[] items = null;
+    private static int[] data = null;
     private static int method = 0;
     private static final int DEFAULTMETHOD = 0;
     /**
@@ -18,9 +18,8 @@ public class run {
      */
     public static void main(String[] args) {
         scanner = new Scanner(System.in);
-        print("Metoda reseni? Pro dynamicky pristup zadejte \"1\", pro greedy pristup \"2\", pro porovnani pristupu \"0\"");
+        print("Metoda reseni? Reseni v linearnim case \"1\", ve kvadratickem case \"2\", vsechna reseni \"0\"");
         int number;
-        int backPackLimit = 0;
         try
         {
             number = Integer.parseInt(scanner.next());
@@ -28,21 +27,21 @@ public class run {
         catch (Exception ex)
         {
             number = DEFAULTMETHOD;
-            print("Naplatny vstup! Zobrazuji porovnani!");
+            print("Naplatny vstup! Vybiram defaultni nastaveni.");
             
         }
         method = number;
         if(number == 1)
         {
-            print("Resim pomoci dynamickeho pristupu.");
+            print("Resim v linearnim case.");
         }
         else if(number == 2)
         {
-            print("Resim pomoci greedy pristupu.");
+            print("Resim v kvadratickem case.");
         }
         else
         {
-            print("Resim pomoci obou pristupu.");
+            print("Resim pomoci vsech pristupu.");
         }
         print("Zadejte jmeno souboru z daty, nebo napiste \"ne\"");
         String fileName = scanner.next();
@@ -51,20 +50,16 @@ public class run {
             fileReader = new FileReader(fileName);
             Scanner fileScanner = new Scanner(fileReader);
             int numberOfItems = Integer.parseInt(fileScanner.nextLine());
-            backPackLimit = Integer.parseInt(fileScanner.nextLine());
-            items = new Item[numberOfItems];
-            String line;
-            String[] lineCells = new String[3];
+            data = new int[numberOfItems];
+            String[] lineCells = fileScanner.nextLine().split(";");
             for(int index = 0; index < numberOfItems; index++)
             {
-                line = fileScanner.nextLine();
-                lineCells = line.split(";",3);
-                items[index] = new Item(Integer.parseInt(lineCells[0]),Integer.parseInt(lineCells[1]));
+                data[index] = Integer.parseInt(lineCells[index]);
             }
         }
         catch(Exception ex)
         {
-            items = null;
+            data = null;
             print("Vstupni data nenalezena, chcete vygenerovat data nahodna? (ano/ne)");
             String choice = scanner.next();
             if(choice.equalsIgnoreCase("ano"))
@@ -83,41 +78,25 @@ public class run {
                         print("Chybny vstup! Zadejte prosim nezapornou nenulovou hodnotu!");
                     }
                 }
-                items = Generator.generate(number);
-                print("Vygenerovano " + items.length + " polozek...");
+                data = Generator.generate(number);
+                print("Vygenerovano " + data.length + " polozek...");
             }
         }
-        if(items != null && items.length > 0)
+        if(data != null && data.length > 0)
         {
-            if(backPackLimit == 0)
-            {
-                print("Zadejte velikost batohu");
-                while(backPackLimit <= 0)
-                {
-                    try
-                    {
-                        backPackLimit = scanner.nextInt();
-                    }
-                    catch(Exception exc)
-                    {
-                        backPackLimit = 0;
-                        print("Chybny vstup! Zadejte prosim nezapornou nenulovou hodnotu!");
-                    }
-                }
-            }
-            Solver solver = new Solver(items, backPackLimit);
+            Solver solver = new Solver(data);
             if(method == 1)
             {
-                solver.solveDynamic();
+                solver.solveLinear();
             }
             else if(method == 2)
             {
-                solver.solveGreedy();
+                solver.solveCubic();
             }
             else
             {
-                solver.solveDynamic();
-                solver.solveGreedy();
+                solver.solveLinear();
+                solver.solveCubic();
             }
         }
         else

@@ -1,80 +1,129 @@
 package pro5;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import java.util.Arrays;
-
 /**
  *
- * @author Xeror
+ * @author VaclavHaramule https://github.com/XerorBattler
  */
 public class Solver {
-    private int[] valueData = null;
-    private int[] weightData = null;
+    private Item[] items = null;
     private int backpackSize;
     public Solver(Item[] data, int backpackSize)
     {
+        this.items = data;
         this.backpackSize = backpackSize;
-        prepareData(data);
-        //Arrays.sort(valueData);
         run.print("V obchode jsou: (PORADI-CENA-VAHA)");
-        for(int index = 0; index < valueData.length; index++)
+        for(int index = 0; index < items.length; index++)
         {
-            System.out.print(index + "-" + valueData[index] + "-"+weightData[index] + " ");
+            run.print(index + "-" + items[index].getPrice() + "-" + items[index].getWeight() + " ", true);
         }
+        run.print("");
        
     }
     void solveGreedy()
     {
-        double[] combinedData = new double[valueData.length];
-        for(int index = 0; index < valueData.length; index++)
+        //toto pole slouzi k ulozeni pomeru mezi cenou a vahou
+        //greedy pak vyuziva nejlepsi pomer
+        double[] combinedData = new double[items.length];
+        for(int index = 0; index < items.length; index++)
         {
-            combinedData[index] = (double)valueData[index] / (double)weightData[index];
+            //radeji pretypuji data kvuli presnosti
+            combinedData[index] = (double)items[index].getPrice() / (double)items[index].getWeight();
         }
+        //nastaveni vychozich hodnot
         int max;
-        int weightSum=0;
-        int valueSum=0;
-        String ret="";
-        //run.print("Prvky:");
+        int weightSum = 0;
+        int valueSum = 0;
+        String ret = "";
         while(true)
         {
+            //pro kazdy cyklus porovnavam s vychozim 0. prvkem
             max = 0;
-            for(int index = 0; index < valueData.length; index++)
+            for(int index = 0; index < items.length; index++)
             {
-                if(combinedData[index] > combinedData[max] && weightData[index] <= backpackSize)
+                //hledam zda soucasny prvek je lepsi nez zatim nejlepsi nalezeny
+                if(combinedData[index] > combinedData[max] && items[index].getWeight() <= backpackSize)
                 {
-                    //System.out.print(combinedData[index]+"-"+weightData[index]+"; ");
                     max = index;
                 }
-            
             }
-            if(max <= 0)break;
-            //System.out.print("[" + valueData[max] + ";" + weightData[max] + "]");
-            valueSum+=valueData[max];
-            weightSum+=weightData[max];
-            backpackSize-=weightData[max];
-            ret+=""+max+", ";
+            //jelikoz pouzivam jako vychozi nulty prvek tak musim po konci cyklu zkontrolovat zda se vejde do kapacity
+            //a nebo jestli uz neni vybran
+            if(max == 0 && items[max].getWeight() > backpackSize)break;
+            if(max == 0 && combinedData[max] < 0)break;
+            //pricitam k sumam
+            valueSum += items[max].getPrice();
+            weightSum += items[max].getWeight();
+            //odecitam od velikosti batohu
+            backpackSize -= items[max].getWeight();
+            //pripravuji si vystupni retezec
+            ret += "" + max + ", ";
+            //odstranuji z pole jiz pouzity prvek, jelikoz pomery jsou vzdy lepsi nez 0
             combinedData[max] = -1;
         }
-        run.print("\nVybrany byly prvky: "+ret+", celkova cena: "+valueSum+", celkova vaha: "+weightSum);
+        run.print("Greedy reseni vybralo predmety: " + ret + "celkova cena: " + valueSum + ", celkova vaha: " + weightSum);
     }
     void solveDynamic()
     {
-        throw new NotImplementedException();
-    }
-    private void prepareData(Item[] data)
-    {
-        valueData = new int[data.length];
-        weightData = new int[data.length];
-        for(int index = 0; index < data.length; index++)
-        {
-            valueData[index] = data[index].getPrice();
-            weightData[index] = data[index].getWeight();
+        //pripravim si dve pole o delce vstupnich dat + 1 (kvuli "logictejsimu" pristupu
+        //kde budu rotovat od 1 do n
+        int[] value = new int[items.length+1];
+        int[] weight = new int[items.length+1];
+
+        //zpracuju vstupni data do vytvorenych poli
+        for (int n = 1; n <= items.length; n++) {
+            value[n] = items[n-1].getPrice();
+            weight[n] = items[n-1].getWeight();
         }
-        for(int index = 0; index < data.length; index++)
-        {
-            valueData[index] = data[index].getPrice();
-            weightData[index] = data[index].getWeight();
+        //vytvorim se dve dvourozmerne pole (matice), tyto matice mi budou slozit jako reseni a jako optimalizace
+        //optimalizacni matice mi urci nejlepsi zisk, ktery se vejde do vahoveho limitu
+        //druha matice nam ukaze zda je prvni reseni lepsi nebo horsi nez druhe
+        int[][] optimalization = new int[items.length+1][backpackSize+1];
+        boolean[][] solution = new boolean[items.length+1][backpackSize+1];
+
+        for (int n = 1; n <= items.length; n++) {
+            for (int w = 1; w <= backpackSize; w++) {
+                int firstOption = optimalization[n-1][w];
+                int secondOption = Integer.MIN_VALUE;
+                if (weight[n] <= w)
+                {
+                    secondOption = value[n] + optimalization[n-1][w-weight[n]];
+                }
+                //vyberu lepsi reseni
+                optimalization[n][w] = Math.max(firstOption, secondOption);
+                //zkontroluju zda je prvni reseni lepsi nez druhe
+                solution[n][w] = (secondOption > firstOption);
+            }
         }
-        
+        //zjistim ktere predmety si mam vybrat
+        boolean[] finalSolution = new boolean[items.length+1];
+        for (int n = items.length, w = backpackSize; n > 0; n--)
+        {
+            if (solution[n][w])
+            {
+                finalSolution[n] = true;
+                w = w - weight[n];
+            }
+            else
+            {
+                finalSolution[n] = false;
+            }
+        }
+
+        //zpracuju data pro vystup
+        String ret="";
+        int weightSum = 0;
+        int valueSum = 0;
+        for (int n = 1; n <= items.length; n++)
+        {
+            if(finalSolution[n])
+            {
+                ret+="" + n + ", ";
+                weightSum+=weight[n];
+                valueSum+=value[n];
+            }
+            
+        }
+        //vypisu vysledek
+        run.print("Dynamicke reseni vybralo predmety: " + ret + "celkova cena: " + valueSum + ", celkova vaha: " + weightSum);
     }
 }

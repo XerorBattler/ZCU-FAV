@@ -2,7 +2,7 @@ package pro5;
 
 /**
  *
- * @author Xeror
+ * @author VaclavHaramule https://github.com/XerorBattler
  */
 public class Generator {
     public static Item[] generate(int itemNumber)

@@ -1,10 +1,8 @@
 package pro5;
 
-import java.util.Arrays;
-
 /**
  *
- * @author Xeror
+ * @author VaclavHaramule https://github.com/XerorBattler
  */
 public class Item
 {
