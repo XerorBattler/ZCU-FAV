@@ -1,17 +1,24 @@
 package pro4;
 
 /**
- *
  * @author VaclavHaramule https://github.com/XerorBattler
  */
 public class Solver {
     private int[] values;
+    /**
+     * Konstruktor pro Solver
+     * 
+     * @param values pole zadanych celociselnych hodnot
+     */
     public Solver(int[] values)
     {
         this.values = values;
         run.print(java.util.Arrays.toString(values));
     }
-    void solveCubic()
+    /**
+     * resi problem v kvadratickem case
+     */
+    void solveQuadratic()
     {
         //nadefinuji si promenne pro nejlepsi soucet a pro zacatek a konec nejlepsiho reseni
         int bestSum = 0;
@@ -38,6 +45,9 @@ public class Solver {
         }
         run.print("Nejlepsi reseni v O(n^2) je suma " + bestSum + ", zacina na indexu " + solutionStart + " a konci na " + solutionEnd);
     }
+    /**
+     * resi problem v linearnim case
+     */
     void solveLinear()
     {
         //nadefinuji promenne
@@ -57,7 +67,7 @@ public class Solver {
                 solutionStart = index;
                 solutionEnd = subIndex;
             }
-            //v pripade ze je reseni horsi zvysuji hlavni index
+            //v pripade ze se dostanu do zaporne sumy posunuji index
             else if(currentSum < 0)
             {
                 index = subIndex + 1;

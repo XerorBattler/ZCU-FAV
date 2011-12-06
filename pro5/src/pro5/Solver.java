@@ -84,14 +84,15 @@ public class Solver {
             for (int w = 1; w <= backpackSize; w++) {
                 int firstOption = optimalization[n-1][w];
                 int secondOption = Integer.MIN_VALUE;
+                //overuji zda se predmet vejde do batohu
                 if (weight[n] <= w)
                 {
                     secondOption = value[n] + optimalization[n-1][w-weight[n]];
                 }
+                //ulozim zda je prvni reseni lepsi nez druhe
+                solution[n][w] = (secondOption > firstOption);
                 //vyberu lepsi reseni
                 optimalization[n][w] = Math.max(firstOption, secondOption);
-                //zkontroluju zda je prvni reseni lepsi nez druhe
-                solution[n][w] = (secondOption > firstOption);
             }
         }
         //zjistim ktere predmety si mam vybrat
@@ -101,7 +102,8 @@ public class Solver {
             if (solution[n][w])
             {
                 finalSolution[n] = true;
-                w = w - weight[n];
+                //odecitam od celkove velikosti batohu
+                w -= weight[n];
             }
             else
             {

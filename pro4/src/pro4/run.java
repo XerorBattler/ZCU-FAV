@@ -91,12 +91,12 @@ public class run {
             }
             else if(method == 2)
             {
-                solver.solveCubic();
+                solver.solveQuadratic();
             }
             else
             {
                 solver.solveLinear();
-                solver.solveCubic();
+                solver.solveQuadratic();
             }
         }
         else
