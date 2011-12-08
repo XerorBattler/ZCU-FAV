@@ -1,4 +1,6 @@
-package blackjack;
+package BlackJack;
+
+import org.bukkit.entity.Player;
 
 /**
  * Class which represent player hand
@@ -75,7 +77,7 @@ public class Hand {
         if(hand==null)return null;
         for(Card card:hand)
         {
-            ret+=card.getName()+" ";
+            ret+=card.getColor()+card.getName()+" ";
         }
         return ret;
     }
@@ -145,7 +147,7 @@ public class Hand {
         String ret="";
         for(Card card:hand)
         {   
-            ret+=" | "+card.getName()+" "+card.getValue();
+            ret+=" | "+card.getColor()+card.getName()+" "+card.getValue();
         }
         return ret;
     }

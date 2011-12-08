@@ -1,8 +1,7 @@
-package BlackJack;
+package blackjack;
 
 import java.util.Collections;
 import java.util.Arrays;
-import org.bukkit.ChatColor;
 /**
  * Card packet class
  * 
@@ -17,52 +16,7 @@ public class Packet {
      */
     public Packet()
     {
-        int value=0;
-        String text="";
-        ChatColor color=ChatColor.WHITE;
-        for(int i=0;i<4;i++)
-        {
-            if(i<=1)
-            {
-                color=ChatColor.DARK_GRAY;
-            }
-            else
-            {
-                color=ChatColor.RED;
-            }
-            for(int j=0;j<13;j++)
-            {
-                if(j<9)
-                {
-                    text=String.valueOf(j+2);
-                    value=j+2;
-                }
-                else
-                {
-                    switch(j){
-                        case 9:
-                            text="J";
-                            value=10;
-                        break;
-                        case 10:
-                            text="Q";
-                            value=10;
-                        break;
-                        case 11:
-                            text="K";
-                            value=10;
-                        break;
-                        case 12:
-                            text="A";
-                            value=11;
-                        break;
-                    }
-                }
-                this.packet[i*13+j]=new Card(text,value,color);
-            }
-        }
-        Collections.shuffle(Arrays.asList(this.packet));
-        Collections.shuffle(Arrays.asList(this.packet));
+        createNewPacket();
     }
     /**
      * Method which takes random card from packet
@@ -112,9 +66,49 @@ public class Packet {
         for (Card card : packet)
         {
             if(card==null)continue;
-            ret+=" "+card.getColor()+card.getName();
+            ret+=" "+card.getName();
         }
         return ret;
+    }
+    private void createNewPacket()
+    {
+        int value=0;
+        String text="";
+        for(int i=0;i<4;i++)
+        {
+            for(int j=0;j<13;j++)
+            {
+                if(j<9)
+                {
+                    text=String.valueOf(j+2);
+                    value=j+2;
+                }
+                else
+                {
+                    switch(j){
+                        case 9:
+                            text="J";
+                            value=10;
+                        break;
+                        case 10:
+                            text="Q";
+                            value=10;
+                        break;
+                        case 11:
+                            text="K";
+                            value=10;
+                        break;
+                        case 12:
+                            text="A";
+                            value=11;
+                        break;
+                    }
+                }
+                this.packet[i*13+j]=new Card(text,value);
+            }
+        }
+        Collections.shuffle(Arrays.asList(this.packet));
+        Collections.shuffle(Arrays.asList(this.packet));
     }
     
     

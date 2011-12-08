@@ -1,5 +1,8 @@
-package blackjack;
+package BlackJack;
 
+import org.bukkit.entity.Player;
+import org.bukkit.ChatColor;
+import org.bukkit.Server;
 /**
  *
  * @author Xeror Battler
@@ -15,9 +18,11 @@ public class PlayerAccount {
     private int bet;
     private boolean display=false;
     private double blackJackRatio=1.5;
-    public PlayerAccount(Player player, boolean display)
+    private Server server;
+    public PlayerAccount(Player player, Server server, boolean display)
     {
         this.player=player;
+        this.server=server;
         this.display=display;
         this.blackJackRatio=BlackJack.getInstance().getBlackJackRatio();
     }
@@ -55,18 +60,18 @@ public class PlayerAccount {
             this.packet=new Packet();
             this.hand=new Hand(this.player);
             this.splitedHand=null;
-            this.player.sendMessage("Game begins!");
-            this.player.sendMessage("(Commands: /bjack "+"h"+"it, /bjack "+"s"+"tay");
+            this.player.sendMessage(ChatColor.GREEN+"Game begins!");
+            this.player.sendMessage(ChatColor.GREEN+"(Commands: /bjack "+ChatColor.WHITE+"h"+ChatColor.GREEN+"it, /bjack "+ChatColor.WHITE+"s"+ChatColor.GREEN+"tay");
             this.hand.addCard(this.packet.takeCard());
-            this.player.sendMessage("Round "+(++this.round)+".: "+hand.showCards());
+            this.player.sendMessage(ChatColor.GREEN+"Round "+(++this.round)+".: "+hand.showCards());
             if(this.bet>0)
             {
-                this.player.sendMessage("Try double your bet with /bjack double");
+                this.player.sendMessage(ChatColor.GREEN+"Try double your bet with /bjack "+ChatColor.WHITE+"d"+ChatColor.GREEN+"ouble");
             }
         }
         else
         {
-            this.player.sendMessage("You don't have enough credit!");
+            this.player.sendMessage(ChatColor.RED+"You don't have enough credit!");
         }
     }
     public void nextCard()
@@ -74,12 +79,12 @@ public class PlayerAccount {
         Hand temp=(this.splitedHand!=null&&this.round>=50)?this.splitedHand:this.hand;
         if(this.round == 1 && temp!=null && temp.topCardsSame() && this.splitedHand==null)
         {
-            this.player.sendMessage("You can split your cards with /bjack "+"s"+"plit");
+            this.player.sendMessage(ChatColor.GREEN+"You can split your cards with /bjack "+ChatColor.WHITE+"s"+ChatColor.GREEN+"plit");
         }
         temp.addCard(this.packet.takeCard());
         this.round++;
-        this.player.sendMessage("Round "+((this.round>=50)?(this.round-50):this.round));
-        this.player.sendMessage("Hand: "+temp.showCards());
+        this.player.sendMessage(ChatColor.GREEN+"Round "+((this.round>=50)?(this.round-50):this.round));
+        this.player.sendMessage(ChatColor.GREEN+"Hand: "+temp.showCards());
         if (temp.getCardSum()>21)
         {
             hold();
@@ -89,18 +94,18 @@ public class PlayerAccount {
     {
         if(this.hand!=null)
         {
-            this.player.sendMessage("Your cards in hand 1: "+hand.showCards());
+            this.player.sendMessage(ChatColor.GREEN+"Your cards in hand 1: "+hand.showCards());
         }
         if(this.splitedHand!=null)
         {
-            this.player.sendMessage("Your cards in hand 2: "+splitedHand.showCards());
+            this.player.sendMessage(ChatColor.GREEN+"Your cards in hand 2: "+splitedHand.showCards());
         }
     }
     public void hold()
     {
         int playerCards=(round>=50)?(round-50):round;
         int betCash=0;
-        this.player.sendMessage("Your points: "+((round>=50)?splitedHand.getCardSum():hand.getCardSum())+", cards: "+((round>50)?splitedHand.showCards():hand.showCards()));
+        this.player.sendMessage(ChatColor.GREEN+"Your points: "+((round>=50)?splitedHand.getCardSum():hand.getCardSum())+", cards: "+((round>50)?splitedHand.showCards():hand.showCards()));
         int playerScore=(this.round>=50)?splitedHand.getCardSum():hand.getCardSum();
         int dealerScore=0;
         if(playerScore<=21)
@@ -109,7 +114,7 @@ public class PlayerAccount {
         }
         else
         {
-            this.player.sendMessage("Sorry, you are over 21!");
+            this.player.sendMessage(ChatColor.GREEN+"Sorry, you are over 21!");
         }
         String betString=(this.bet>0)?String.valueOf(this.bet):"";
         //debug
@@ -134,14 +139,14 @@ public class PlayerAccount {
                     wonCash*=this.blackJackRatio;
                 }
             }
-            this.player.sendMessage("You won "+wonCash+"!");
+            this.player.sendMessage(ChatColor.GREEN+"You won "+wonCash+"!");
             if(this.bet>0)
             {
                 this.cash+=betCash+wonCash;
             }
             if(display)
             {
-                System.out.println(this.player.getDisplayName()+" has won "+wonCash+" in BlackJack");
+                this.server.broadcastMessage(this.player.getDisplayName()+" has won "+wonCash+" in BlackJack");
             }
             if(this.round>50 && this.splitedHand!=null)
             {
@@ -154,7 +159,7 @@ public class PlayerAccount {
         }
         else if(playerScore <= 21 && playerScore==dealerScore && playerCards==this.dealerRound)
         {
-            this.player.sendMessage("It's a tie!");
+            this.player.sendMessage(ChatColor.GREEN+"It's a tie!");
             if(this.bet>0)
             {
                 this.cash+=(splitedHand!=null && this.round<50)?Integer.parseInt(betString):Integer.parseInt(betString)/2.0;
@@ -178,10 +183,10 @@ public class PlayerAccount {
                     betCash/=2;
                 }
             }
-            this.player.sendMessage("You lose "+betCash+"!");
+            this.player.sendMessage(ChatColor.GREEN+"You lose "+betCash+"!");
             if(this.bet>0 && BlackJack.getInstance().getAnnounce())
             {
-                System.out.println(this.player.getDisplayName()+" has lost "+betCash+" in BlackJack");
+                this.server.broadcastMessage(this.player.getDisplayName()+" has lost "+betCash+" in BlackJack");
             }
             if(this.round>50 && this.splitedHand!=null)
             {
@@ -196,7 +201,7 @@ public class PlayerAccount {
         this.bet=(this.round>=50)?this.bet/2:0;
         if(this.round==51)
         {
-            this.player.sendMessage("One more hand left ("+splitedHand.showCards()+")");
+            this.player.sendMessage(ChatColor.GREEN+"One more hand left ("+splitedHand.showCards()+")");
         }
         else{
             this.round=0;
@@ -247,7 +252,7 @@ public class PlayerAccount {
             if(playerScore>21 && sum>=17 || playerScore<sum && sum>=17)break;
             if(playerScore==21&&playerCards<=this.dealerRound)break;
         }
-        this.player.sendMessage("Dealer's points: "+dealerHand.getCardSum()+" ( "+dealerHand.showCards()+")");
+        this.player.sendMessage(ChatColor.GRAY+"Dealer's points: "+dealerHand.getCardSum()+" ( "+dealerHand.showCards()+")");
         return sum;
     }
     public void playerQuit()
@@ -264,7 +269,7 @@ public class PlayerAccount {
             {
                 this.cash-=this.bet;
                 this.bet*=2;
-                this.player.sendMessage("You doubled your bet");
+                this.player.sendMessage(ChatColor.GREEN+"You doubled your bet");
                 this.nextCard();
                 this.hold();
             }
@@ -282,21 +287,21 @@ public class PlayerAccount {
     {
         if(message.length()>0)
         {
-            this.player.sendMessage(message);
+            this.player.sendMessage(ChatColor.RED+message);
         }
     }
     public void sendMessage(String message)
     {
         if(message.length()>0)
         {
-            this.player.sendMessage(message);
+            this.player.sendMessage(ChatColor.WHITE+message);
         }
     }
     public void infoMessage(String message)
     {
         if(message.length()>0)
         {
-            this.player.sendMessage(message);
+            this.player.sendMessage(ChatColor.GRAY+message);
         }
     }
 }
