@@ -1,21 +1,23 @@
 package blackjack;
 
+import java.util.LinkedList;
+
 /**
  * Class which represent player hand
  *  
  * @author Xeror Battler
- * @version 1.1
+ * @version 1.2
  */
 public class Hand {
-    private Card[] hand;
+    private LinkedList<Card> hand;
     /**
      * Hand constructor
      * 
      * @param owner player
      */
-    public Hand(Player owner)
+    public Hand()
     {
-        this.hand=null;
+        this.hand = new LinkedList<Card>();
     }
     /**
      * Adds card to player hand
@@ -24,19 +26,7 @@ public class Hand {
      */
     public void addCard(Card card)
     {
-        if(this.hand==null)
-        {
-           this.hand=new Card[1];
-           this.hand[0]=card;
-        }
-        else
-        {
-            Card[] newHand=new Card[this.hand.length+1];
-            System.arraycopy(this.hand,0,newHand,0,this.hand.length);
-            newHand[newHand.length-1]=card;
-            this.hand=new Card[newHand.length];
-            System.arraycopy(newHand,0,this.hand,0,newHand.length);
-        }
+        this.hand.add(card);
     }
     /**
      * Counts card value in hand, getter
@@ -47,8 +37,8 @@ public class Hand {
     {
         int sum=0;
         int ace=0;
-        if(hand==null)return 0;
-        for (Card card : hand)
+        if(hand.size() == 0)return 0;
+        for(Card card : hand)
         {
             if(card.getValue()==11)
             {
@@ -71,11 +61,11 @@ public class Hand {
      */
     public String showCards()
     {
-        String ret="";
-        if(hand==null)return null;
-        for(Card card:hand)
+        String ret = "";
+        if(hand.size() == 0)return null;
+        for(Card card : hand)
         {
-            ret+=card.getName()+" ";
+            ret += card.getName()+" ";
         }
         return ret;
     }
@@ -86,13 +76,9 @@ public class Hand {
      */
     public Card split()
     {
-        if(topCardsSame()&&this.hand!=null)
+        if(topCardsSame() && this.hand.size() > 0)
         {
-                Card[] tempHand=new Card[this.hand.length];
-                System.arraycopy(this.hand,0,tempHand,0,this.hand.length);
-                this.hand=new Card[this.hand.length-1];
-                System.arraycopy(tempHand,0,this.hand,0,this.hand.length);
-                return this.hand[this.hand.length-1];
+            return this.hand.pollLast();
         }
         return null;
     }
@@ -103,9 +89,9 @@ public class Hand {
      */
     public boolean topCardsSame()
     {
-        if(hand!=null && hand.length==2)
+        if(hand.size() == 2)
         {
-            if(hand[0].getName().equalsIgnoreCase(hand[1].getName()))
+            if(hand.get(0).getName().equalsIgnoreCase(hand.get(1).getName()))
             {
                 return true;
             }
@@ -119,7 +105,7 @@ public class Hand {
      */
     public int getCountCards()
     {
-        return this.hand.length;
+        return this.hand.size();
     }
     /**
      * Verify if the cards are blackjack, if so returns true
@@ -128,7 +114,7 @@ public class Hand {
      */
     public boolean isBlackJack()
     {
-        if(hand.length==2 && getCardSum()==21)
+        if(hand.size() == 2 && getCardSum() == 21)
         {
             return true;
         }

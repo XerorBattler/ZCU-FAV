@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package blackjack;
 
 /**
@@ -9,18 +5,36 @@ package blackjack;
  * @author Xeror
  */
 public class Player {
-    private Packet packet;
     private String name;
+    private GameAccount account;
+    private BankAccount bank;
+    
+    public Player(String name)
+    {
+        this.name = name;
+        this.account = new GameAccount();
+    }
     public String getName()
     {
         return this.name;
     }
+    public GameAccount getAccount()
+    {
+        if(account == null)this.account = new GameAccount();
+        return this.account;
+    }
+    public BankAccount getBank()
+    {
+        if(bank == null)this.bank = Bank.getAccount(name);
+        return this.bank;
+    }
     public void sendMessage(String text)
     {
-        System.out.println(text);
+        run.log(text);
     }
-    public String getDisplayName()
-    {
-        return getName();
+    @Override
+    public String toString() {
+        return this.name + this.account.toString();
     }
+    
 }

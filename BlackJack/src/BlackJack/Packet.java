@@ -1,7 +1,7 @@
 package blackjack;
 
-import java.util.Collections;
-import java.util.Arrays;
+import java.util.LinkedList;
+
 /**
  * Card packet class
  * 
@@ -9,8 +9,7 @@ import java.util.Arrays;
  * @version 1.1
  */
 public class Packet {
-    private Card[] packet=new Card[4*13];
-    private int cardCount=52;
+    private LinkedList<Card> packet = new LinkedList<Card>();
     /**
      * Creates shuffled packet
      */
@@ -25,9 +24,7 @@ public class Packet {
      */
     public Card takeCard()
     {
-        this.cardCount--;
-        Card card=packet[cardCount];
-        packet[cardCount]=null;
+        Card card = packet.pollLast();
         return card;
     }
     /**
@@ -52,7 +49,7 @@ public class Packet {
      */
     public int getCardsLeft()
     {
-        return this.cardCount;
+        return this.packet.size();
     }
     /**
      * Creates String with card list
@@ -104,11 +101,11 @@ public class Packet {
                         break;
                     }
                 }
-                this.packet[i*13+j]=new Card(text,value);
+                this.packet.add(new Card(text, value));
             }
         }
-        Collections.shuffle(Arrays.asList(this.packet));
-        Collections.shuffle(Arrays.asList(this.packet));
+        //Collections.shuffle(Arrays.asList(this.packet));
+        //Collections.shuffle(Arrays.asList(this.packet));
     }
     
     

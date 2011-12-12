@@ -14,12 +14,11 @@ public class Card {
      * 
      * @param cardName String card name
      * @param cardValue int card value
-     * @param cardColor ChatColor card color
      */
-    public Card(String cardName, int cardValue)
+    public Card(String name, int value)
     {
-        this.cardName=cardName;
-        this.cardValue=cardValue;
+        this.cardName = name;
+        this.cardValue = value;
     }
     /**
      * Card name getter
