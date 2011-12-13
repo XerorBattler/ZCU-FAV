@@ -13,7 +13,7 @@ public class BankAccount {
      */
     public BankAccount()
     {
-        this.currentCash = Bank.getDefaultCash();
+        this.currentCash = BlackJack.getBankDefaultCash();
     }
     /**
      * Remove some cash from account

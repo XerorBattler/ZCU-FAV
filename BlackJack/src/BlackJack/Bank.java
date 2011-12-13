@@ -13,8 +13,6 @@ import java.util.Map;
 public class Bank {
     
     private static Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
-    
-    //default cash
     private static int defaultCash;
     
     /**
@@ -22,7 +20,7 @@ public class Bank {
      */
     public Bank()
     {
-         defaultCash = 1000;
+         defaultCash = BlackJack.getBankDefaultCash();
     }
     /**
      * This method return bank account by name
@@ -52,14 +50,5 @@ public class Bank {
             }
         }
         return sum;
-    }
-    /**
-     * Getter for default cash
-     * 
-     * @return default cash
-     */
-    public static int getDefaultCash()
-    {
-        return defaultCash;
     }
 }

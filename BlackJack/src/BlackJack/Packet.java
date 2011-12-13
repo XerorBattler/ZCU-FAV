@@ -1,7 +1,9 @@
 package blackjack;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * Card packet class
@@ -103,8 +105,8 @@ public class Packet {
     }
     private void shuffle()
     {
-        Collections.shuffle(this.packet);
-        Collections.shuffle(this.packet);
+        Collections.shuffle(this.packet, new Random(System.currentTimeMillis()/1000));
+        Collections.shuffle(this.packet, new Random(System.currentTimeMillis()/1000));
     }
     
 }

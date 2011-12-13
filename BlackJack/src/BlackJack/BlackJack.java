@@ -1,5 +1,6 @@
 package blackjack;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Scanner;
 /**
@@ -11,9 +12,10 @@ import java.util.Scanner;
 public class BlackJack
 {
     //default vars
-    private int minBet = 1;
-    private int maxBet = 1000;
-    private double blackJackRatio = 1.5;
+    private int minBet;
+    private int maxBet;
+    private double blackJackRatio;
+    private static int bankDefaultCash ;
     
     //static vars
     private static Scanner scanner = new Scanner(System.in);
@@ -30,6 +32,7 @@ public class BlackJack
      */
     public BlackJack(int playerCount)
     {
+        loadDefaults();
         String name;
         bank = new Bank();
         for(int i = 0; i < playerCount; i++)
@@ -188,12 +191,7 @@ public class BlackJack
                 bet = minBet;
             }
             cash = players.get(i).getBank().getCash();
-            if(bet <= cash)
-            {
-                players.get(i).getBank().removeCash(bet);
-                players.get(i).getAccount().addBet(bet);
-            }
-            else if(bet < this.minBet)
+            if(bet < this.minBet)
             {
                 msg("Neni mozne vsadit tak malo, sazim minimum!");
                 players.get(i).getBank().removeCash(this.minBet);
@@ -205,6 +203,11 @@ public class BlackJack
                 players.get(i).getBank().removeCash(this.maxBet);
                 players.get(i).getAccount().addBet(this.maxBet);
             }
+            else if(bet <= cash)
+            {
+                players.get(i).getBank().removeCash(bet);
+                players.get(i).getAccount().addBet(bet);
+            }
             else
             {
                 msg("Nemas dostatek kreditu! Sazim vse!");
@@ -213,6 +216,7 @@ public class BlackJack
             }
         }
         scanner.nextLine();
+        msg(dealer.toString());
     }
     /**
      * Switches game to next player
@@ -381,6 +385,38 @@ public class BlackJack
             player.getAccount().tie();
         }
         player.getBank().setCash(player.getBank().getCash() + modifyCash);
+    }
+    /**
+     * Getter for default cash
+     * 
+     * @return default cash
+     */
+    public static int getBankDefaultCash()
+    {
+        return bankDefaultCash;
+    }
+    private void loadDefaults()
+    {
+        File file = new File("settings.txt");
+        msg("Nacitam nastaveni");
+        try
+        {
+            Scanner fileScanner = new Scanner(file);
+            
+            this.minBet = Integer.parseInt(fileScanner.nextLine());
+            this.maxBet = Integer.parseInt(fileScanner.nextLine());
+            this.blackJackRatio = Double.parseDouble(fileScanner.nextLine());
+            bankDefaultCash = Integer.parseInt(fileScanner.nextLine());
+        }
+        catch(Exception ex)
+        {
+            msg("Chyba pri nacitani nastaveni, nastavuji zakladni hodnoty");
+            this.minBet = 1;
+            this.maxBet = 1000;
+            this.blackJackRatio = 1.5;
+            bankDefaultCash = 1000;
+        }
+        msg("Nastaveni nacteno");
     }
     //below are all console prints in special form
     public static void msg(int numberInText)
