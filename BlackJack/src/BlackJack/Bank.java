@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package blackjack;
 
 import java.util.Collection;
@@ -9,17 +5,40 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
- * @author Xeror
+ * This class represents bank system
+ * 
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 1.1
  */
 public class Bank {
     
     private static Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
     
+    //default cash
+    private static int defaultCash;
+    
+    /**
+     * Constructor which defines default value
+     */
+    public Bank()
+    {
+         defaultCash = 1000;
+    }
+    /**
+     * This method return bank account by name
+     * 
+     * @param name player name
+     * @return bank account
+     */
     public static BankAccount getAccount(String name)
     {
         return bankAccounts.get(name);
     }
+    /**
+     * This method returns money of all accounts
+     * 
+     * @return total cash
+     */
     public static int getTotalCash()
     {
         int sum = 0;
@@ -33,5 +52,14 @@ public class Bank {
             }
         }
         return sum;
+    }
+    /**
+     * Getter for default cash
+     * 
+     * @return default cash
+     */
+    public static int getDefaultCash()
+    {
+        return defaultCash;
     }
 }

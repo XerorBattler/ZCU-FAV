@@ -3,8 +3,8 @@ package blackjack;
 /**
  * Card class
  * 
- * @author Xeror Battler
- * @version 1.0
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 1.1
  */
 public class Card {
     private String cardName;

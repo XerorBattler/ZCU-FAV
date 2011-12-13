@@ -3,8 +3,10 @@ package blackjack;
 import java.util.Scanner;
 
 /**
- *
- * @author Xeror
+ * Main class for running BlackJack
+ * 
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 1.1
  */
 public class run {
     public static void main(String[] args)

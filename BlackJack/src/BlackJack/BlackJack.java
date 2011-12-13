@@ -3,27 +3,35 @@ package blackjack;
 import java.util.ArrayList;
 import java.util.Scanner;
 /**
- *
- * @author Xeror Battler
+ * This class handles almost all blackjack events, this class is remake of original bukkit plugin BlackJack
+ * 
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 2.0
  */
 public class BlackJack
 {
-
-    private static Scanner scanner = new Scanner(System.in);
-    
+    //default vars
     private int minBet = 1;
     private int maxBet = 1000;
     private double blackJackRatio = 1.5;
     
-    //staticke promenne
+    //static vars
+    private static Scanner scanner = new Scanner(System.in);
     private static ArrayList<Player> players = new ArrayList<Player>();
+    private static Bank bank;
     private static Packet packet;
     private static int activePlayer = 0;
     private static Dealer dealer;
     
+    /**
+     * Contructor which handles blackjack game
+     * 
+     * @param playerCount number of player in game
+     */
     public BlackJack(int playerCount)
     {
         String name;
+        bank = new Bank();
         for(int i = 0; i < playerCount; i++)
         {
             msg("Zadejte jmeno hrace " +(i + 1) + ": ", true);
@@ -39,8 +47,18 @@ public class BlackJack
         }
         msg("Konec hry");
     }
+    /**
+     * This method is used for handling all player commands
+     * 
+     * @return false if player wants to quit
+     */
     private boolean getCommand()
     {
+        if(packet.getCardsLeft() == 0)
+        {
+            msg("Nemel bych, ale micham novy balicek!");
+            packet = new Packet();
+        }
         if(players.isEmpty())
         {
             msg("Zadni hraci nezustali ve hre!");
@@ -59,9 +77,19 @@ public class BlackJack
             {
                 msg("*** NYNI JE NA RADE HRAC " + players.get(activePlayer).getName() + " ***");
             }
+            else
+            {
+                msg("****************");
+            }
             if(players.get(activePlayer).getAccount().playerHasTooMuch())
             {
                 msg("Sorry, presahl jsi 21!");
+                players.get(activePlayer).getAccount().hold();
+                return true;
+            }
+            if(players.get(activePlayer).getAccount().playerHasBlackJack())
+            {
+                msg("Mas kliku! BlackJack!");
                 players.get(activePlayer).getAccount().hold();
                 return true;
             }
@@ -104,13 +132,17 @@ public class BlackJack
             {
                 return false;
             }
+            else if(split[0].equalsIgnoreCase("stav"))
+            {
+                this.stats();
+            }
             else if(split[0].equalsIgnoreCase("help"))
             {
-                help();
+                this.help();
             }
             else
             {
-                help();
+                this.help();
             }
         }
         else
@@ -119,63 +151,9 @@ public class BlackJack
         }
         return true;
     }
-    private void nextPlayer()
-    {
-        activePlayer =(activePlayer + 1) % players.size();
-    }
-    public static Player getActivePlayer()
-    {
-        return players.get(activePlayer);
-    }
-    private boolean noPlayersLeft()
-    {
-        boolean bool = true;
-        for(Player player : players)
-        {
-            if(player.getAccount().plays())
-            {
-                bool = false;
-            }
-        }
-        return bool;
-    }
-    public static Packet getPacket()
-    {
-        return packet;
-    }
-    public void showAll()
-    {
-        msg(dealer.toString());
-        for(Player player : players)
-        {
-            msg("Hrac " + player.toString());
-        }
-    }
-    private void createPlayer(String name)
-    {
-        players.add(new Player(name));
-    }
-    private void help()
-    {
-        msg("BlackJack napoveda:");
-        msg("Pro zapoceti nove hry: \"game\"");
-        msg("Pro dalsi kartu: \"hit\"");
-        msg("Pro cekani: \"hold\"");
-        msg("Pro stav hracskych uctu: \"status\"");
-        msg("Pro zobrazeni teto napovedy: \"help\"");
-        msg("Nize uvedene prikazy lze pouzit pouze v prvnim kole!");
-        msg("Pro zdvojnasobeni sazky: \"double\"");
-        msg("Pro rozdeleni stejnych karet: \"split\"");
-    }
-    public void status()
-    {
-        String ret = "Stav hracu:";
-        for(Player player : players)
-        {
-           ret += "\nHrac \"" + player.getName() + "\", aktivni hra: " +player.getAccount().plays() + ", konto: "+player.getBank().getCash(); 
-        }
-        msg(ret);
-    }
+    /**
+     * Method which prepare every new round
+     */
     private void initGame()
     {
         msg("Pripravuji hru...");
@@ -236,30 +214,95 @@ public class BlackJack
         }
         scanner.nextLine();
     }
-    //zpravy vsem
-    public static void msg(int numberInText)
+    /**
+     * Switches game to next player
+     */
+    private void nextPlayer()
     {
-        msg(numberInText, false);
+        activePlayer =(activePlayer + 1) % players.size();
     }
-    public static void msg(int numberInText, boolean noNewLine)
+    /**
+     * Getter for current active player
+     * 
+     * @return active player
+     */
+    public static Player getActivePlayer()
     {
-        msg(String.valueOf(numberInText), noNewLine);
+        return players.get(activePlayer);
     }
-    public static void msg(String text)
+    /**
+     * This method checks if all player holds
+     * 
+     * @return true if all player holds
+     */
+    private boolean noPlayersLeft()
     {
-        msg(text, false);
-    }
-    public static void msg(String text, boolean noNewLine)
-    {
-        if(noNewLine)
+        boolean bool = true;
+        for(Player player : players)
         {
-            System.out.print(text);
+            if(player.getAccount().plays())
+            {
+                bool = false;
+            }
         }
-        else
-        {
-            System.out.println(text);
-        }
+        return bool;
     }
+    /**
+     * This method return used card packet
+     * 
+     * @return card packet
+     */
+    public static Packet getPacket()
+    {
+        return packet;
+    }
+    /**
+     * This method add new player to game
+     * 
+     * @param name player name
+     */
+    private void createPlayer(String name)
+    {
+        players.add(new Player(name));
+    }
+    /**
+     * Method that shows help
+     */
+    private void help()
+    {
+        msg("BlackJack napoveda:");
+        msg("Pro zapoceti nove hry: \"game\"");
+        msg("Pro dalsi kartu: \"hit\"");
+        msg("Pro cekani: \"hold\"");
+        msg("Pro stav tveho uctu: \"stav\"");
+        msg("Pro status hry: \"status\"");
+        msg("Pro zobrazeni teto napovedy: \"help\"");
+        msg("Nize uvedene prikazy lze pouzit pouze v prvnim kole!");
+        msg("Pro zdvojnasobeni sazky: \"double\"");
+        msg("Pro rozdeleni stejnych karet: \"split\"");
+    }
+    /**
+     * Method which show all ingame players status
+     */
+    public void status()
+    {
+        String ret = "Stav hracu:";
+        for(Player player : players)
+        {
+           ret += "\nHrac \"" + player.getName() + "\", aktivni hra: " +player.getAccount().plays() + ", konto: "+player.getBank().getCash(); 
+        }
+        msg(ret);
+    }
+    /**
+     * Method which show stats of current player
+     */
+    public void stats()
+    {
+        msg(players.get(activePlayer).getAccount().stats());
+    }
+    /*
+     * This method is first phase of preparing round results
+     */
     private void prepareWinnerData()
     {
         msg("Vyhodnoceni: ");
@@ -274,20 +317,23 @@ public class BlackJack
         for(Player player : players)
         {
             account = player.getAccount();
+            boolean splitedHand = account.haveSplitted();
             score = account.getScore(false);
-            //msg("zhodnoceno na " + calculateWinner(dealerScore[0], dealerScore[1], score[0], score[1]));
             this.solve(player, true, calculateWinner(dealerScore[0], dealerScore[1], score[0], score[1]));
-            if(account.haveSplitted())
+            if(splitedHand)
             {
                 score = account.getScore(true);
-                //msg("zhodnoceno na " + calculateWinner(dealerScore[0], dealerScore[1], score[0], score[1]));
                 this.solve(player, false, calculateWinner(dealerScore[0], dealerScore[1], score[0], score[1]));
             }
         }
     }
+    /**
+     * This method is second phase of preparing round results, in this method are ALL USED BLACKJACK RULES
+     */    
+
     private int calculateWinner(int dealerPoints, int dealerCards, int playerPoints, int playerCards)
     {
-        //msg("Porovnavam "+dealerPoints+"["+dealerCards+"] a "+"Porovnavam "+playerPoints+"["+playerCards+"]");
+        if(playerPoints == 21 && playerCards == 2 && dealerPoints!=21)return 3;
         if(playerPoints > 21)return 0;
         if(dealerPoints > 21)return 1;
         if(playerPoints == dealerPoints && playerCards < dealerCards)
@@ -299,13 +345,15 @@ public class BlackJack
             return 2;
         }
         if(dealerPoints == 21 && playerPoints < 21)return 0;
-        if(playerPoints == 21 && playerCards == 2)return 3;
         if(playerPoints > dealerPoints)
         {
             return 1;
         }
         return 0;
     }
+    /**
+     * This method is third phase of preparing round results
+     */
     private void solve(Player player,boolean type, int status)
     {
         int modifyCash = 0;
@@ -333,5 +381,29 @@ public class BlackJack
             player.getAccount().tie();
         }
         player.getBank().setCash(player.getBank().getCash() + modifyCash);
+    }
+    //below are all console prints in special form
+    public static void msg(int numberInText)
+    {
+        msg(numberInText, false);
+    }
+    public static void msg(int numberInText, boolean noNewLine)
+    {
+        msg(String.valueOf(numberInText), noNewLine);
+    }
+    public static void msg(String text)
+    {
+        msg(text, false);
+    }
+    public static void msg(String text, boolean noNewLine)
+    {
+        if(noNewLine)
+        {
+            System.out.print(text);
+        }
+        else
+        {
+            System.out.println(text);
+        }
     }
 }

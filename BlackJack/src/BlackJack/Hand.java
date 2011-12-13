@@ -5,8 +5,8 @@ import java.util.LinkedList;
 /**
  * Class which represent player hand
  *  
- * @author Xeror Battler
- * @version 1.2
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 1.3
  */
 public class Hand {
     private LinkedList<Card> hand;
@@ -74,19 +74,6 @@ public class Hand {
         return ret;
     }
     /**
-     * Verify if the cards are the same, if so returns the second of these
-     * 
-     * @return Card splitted card
-     */
-    public Card split()
-    {
-        if(topCardsSame() && this.hand.size() > 0)
-        {
-            return this.hand.pollLast();
-        }
-        return null;
-    }
-    /**
      * Verify if the cards are the same, if so returns true
      * 
      * @return boolean true if are cards same
@@ -110,19 +97,6 @@ public class Hand {
     public int getCountCards()
     {
         return this.hand.size();
-    }
-    /**
-     * Verify if the cards are blackjack, if so returns true
-     * 
-     * @return boolean if are cards blackjack
-     */
-    public boolean isBlackJack()
-    {
-        if(hand.size() == 2 && getCardSum() == 21)
-        {
-            return true;
-        }
-        return false;
     }
     /**
      * Creates String with card in hand list

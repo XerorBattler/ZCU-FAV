@@ -1,14 +1,13 @@
 package blackjack;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
 /**
  * Card packet class
  * 
- * @author Xeror Battler
- * @version 1.1
+ * @author Vaclav Haramule https://github.com/XerorBattler
+ * @version 1.2
  */
 public class Packet {
     private LinkedList<Card> packet = new LinkedList<Card>();
@@ -28,21 +27,6 @@ public class Packet {
     {
         Card card = packet.pollLast();
         return card;
-    }
-    /**
-     * Method which count card value
-     * 
-     * @return int packet value
-     */
-    public int packetValue()
-    {
-        int sum=0;
-        for(Card card:packet)
-        {   
-            if(card==null)continue;
-            sum+=card.getValue();
-        }
-        return sum;
     }
     /**
      * Getter for card count
