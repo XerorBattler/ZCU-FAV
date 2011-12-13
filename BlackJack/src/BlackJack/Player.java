@@ -13,6 +13,7 @@ public class Player {
     {
         this.name = name;
         this.account = new GameAccount();
+        this.bank = new BankAccount();
     }
     public String getName()
     {
@@ -30,7 +31,7 @@ public class Player {
     }
     public void sendMessage(String text)
     {
-        run.log(text);
+        BlackJack.msg(text);
     }
     @Override
     public String toString() {

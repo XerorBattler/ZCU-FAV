@@ -9,16 +9,18 @@ package blackjack;
 public class Card {
     private String cardName;
     private int cardValue;
+    private String color;
     /**
      * Card constructor
      * 
      * @param cardName String card name
      * @param cardValue int card value
      */
-    public Card(String name, int value)
+    public Card(String name, int value, String color)
     {
         this.cardName = name;
         this.cardValue = value;
+        this.color = color; 
     }
     /**
      * Card name getter
@@ -27,7 +29,7 @@ public class Card {
      */
     public String getName()
     {
-        return this.cardName;
+        return this.color + this.cardName;
     }
     /**
      * Card value getter

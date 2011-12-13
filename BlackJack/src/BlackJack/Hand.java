@@ -54,6 +54,10 @@ public class Hand {
         }
         return sum;
     }
+    public Card takeCard()
+    {
+        return this.hand.pollLast();
+    }
     /**
      * Method which puts all cards names into String
      * 

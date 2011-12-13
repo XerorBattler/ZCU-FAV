@@ -17,25 +17,26 @@ public class GameAccount {
     private Hand hand;
     private Hand splitedHand;
     
-    private boolean hold = false;
-    
     private int round;
     private int dealerRound;
     
-    private boolean display=false;
     private double blackJackRatio=1.5;
+    
+    private int splitedStatus = 0;
+
+    private boolean hold = false;
     public GameAccount()
     {
         this.totalPlayed = 0;
         this.wins = 0;
         this.loses = 0;
+        this.round = 0;
         this.hand = new Hand();
         this.splitedHand = new Hand();
     }
     public boolean plays()
     {
-        if(this.round>0)return true;
-        return hold;
+        return !hold;
     }
     public void addCard(Card card)
     {
@@ -43,18 +44,89 @@ public class GameAccount {
     }
     public void addBet(int bet)
     {
-        this.bet = bet;
+        this.bet += bet;
     }
-    public void hit(Packet packet)
+    public void hit()
     {
-        Card card = packet.takeCard();
-        this.hand.addCard(card);
-        run.log("Dostal jsi " + card.getName() + ", soucet " + hand.getCardSum());
+        Card card = BlackJack.getPacket().takeCard();
+        Player player = BlackJack.getActivePlayer();
+        BlackJack.msg("Dostal jsi " + card.getName() + ", soucet ", true);
+        if(this.splitedStatus == 2)
+        {
+            this.splitedHand.addCard(card);
+            player.sendMessage(this.splitedHand.getCardSum() + ", karty: " + this.splitedHand.showCards());
+        }
+        else
+        {
+            this.hand.addCard(card);
+            player.sendMessage(this.hand.getCardSum() + ", karty: " + this.hand.showCards());
+        }
+        this.round++;
+        
     }
     public void hold()
     {
-        this.hold = true;
-        run.log("Soucet karet " + hand.getCardSum());
+        Player player = BlackJack.getActivePlayer();
+        this.round = 0;
+        if(this.splitedStatus == 2)
+        {
+            player.sendMessage("Uzavreno s hodnotou " + splitedHand.getCardSum() + ", karty: " + splitedHand.showCards());
+            this.hold = true;
+        }
+        else if(this.splitedStatus == 1)
+        {
+            this.splitedStatus++;
+            player.sendMessage("Uzavreno s hodnotou " + hand.getCardSum() + ", karty: " + hand.showCards());
+            player.sendMessage("Mas jeste jedny karty!");
+        }
+        else
+        {
+            player.sendMessage("Uzavreno s hodnotou " + hand.getCardSum() + ", karty: " + hand.showCards());
+            this.hold = true;
+        }
+    }
+    public void doubleBet()
+    {
+        Player player = BlackJack.getActivePlayer();
+        if(player.getBank().getCash() >= this.bet)
+        {
+            this.splitBet = this.bet;
+        }
+        else
+        {
+            player.sendMessage("Neni mozne zdvojnasobit sazku!");
+        }
+    }
+    public void split()
+    {
+        Player player = BlackJack.getActivePlayer();
+        if(this.splitedStatus == 0 && this.round == 0)
+        {
+            if(this.hand.topCardsSame() && player.getBank().getCash() >= this.bet)
+            {
+                Packet packet = BlackJack.getPacket();
+                
+                this.splitedHand.addCard(this.hand.takeCard());
+                
+                this.splitBet = this.bet;
+                
+                this.hand.addCard(packet.takeCard());
+                this.splitedHand.addCard(packet.takeCard());
+                
+                player.sendMessage(player.getName()
+                        + "\nRuka 1 soucet: " + this.hand.getCardSum() + ", karty: " + this.hand.showCards()
+                        + "\nRuka 2 soucet: " + this.splitedHand.getCardSum() + ", karty: " + this.splitedHand.showCards());
+            }
+        }
+        else if(this.round > 0)
+        {
+            player.sendMessage("Rozdeleni je mozne pouze v prvnim kole v pripade stejnych karet.");
+        }
+        else
+        {
+            player.sendMessage("Rozdelit karty muzete jen jednou.");
+        }
+    }
 //        int playerCards=(round>=50)?(round-50):round;
 //        int betCash=0;
 //        player.sendMessage("Your points: "+((round>=50)?splitedHand.getCardSum():hand.getCardSum())+", cards: "+((round>50)?splitedHand.showCards():hand.showCards()));
@@ -158,11 +230,7 @@ public class GameAccount {
 //        else{
 //            this.round=0;
 //        }
-    }
-    public boolean canSplit()
-    {
-        return this.hand.topCardsSame();
-    }
+//    }
 //    public void nextCard()
 //    {
 //        
@@ -181,56 +249,56 @@ public class GameAccount {
 //        }
 //    }
    
-    public void split(Player player)
-    {
-        if(this.cash>=(this.bet*2) && this.round==2 &&this.splitedHand==null && this.hand!=null && this.hand.topCardsSame())
-        {
-            this.cash-=bet;
-            this.bet*=2;
-            this.splitedHand=new Hand();
-            this.splitedHand.addCard(this.hand.split());
-            this.round--;
-            player.sendMessage("You splited the cards!");
-        }
-        else if(this.splitedHand!=null)
-        {
-            player.sendMessage("You can split only once!");
-        }
-        else if(this.hand.topCardsSame())
-        {
-            player.sendMessage("You need two same cards for split");
-        }
-        else if(this.round!=2)
-        {
-            player.sendMessage("You can split only in second round!");
-        }
-        else if(this.cash<(this.bet*2))
-        {
-            player.sendMessage("You don't have enough credit!");
-        }
-        else
-        {
-            player.sendMessage("You can't split now!");
-        }
-    }
-    private int dealer(Player player, Packet packet, int playerScore, int playerCards)
-    {
-        Hand dealerHand=new Hand();
-        int sum=0;
-        this.dealerRound=0;
-        while(sum < 21 && (sum < playerScore || sum <=17))
-        {
-            this.dealerRound++;
-            dealerHand.addCard(packet.takeCard());
-            sum=dealerHand.getCardSum();
-            if(playerScore>21 && sum>=17 || playerScore<sum && sum>=17)break;
-            if(playerScore==21&&playerCards<=this.dealerRound)break;
-        }
-        player.sendMessage("Dealer's points: "+dealerHand.getCardSum()+" ( "+dealerHand.showCards()+")");
-        return sum;
-    }
-    public void doubleBet(Player player)
-    {
+//    public void split(Player player)
+//    {
+//        if(this.cash>=(this.bet*2) && this.round==2 &&this.splitedHand==null && this.hand!=null && this.hand.topCardsSame())
+//        {
+//            this.cash-=bet;
+//            this.bet*=2;
+//            this.splitedHand=new Hand();
+//            this.splitedHand.addCard(this.hand.split());
+//            this.round--;
+//            player.sendMessage("You splited the cards!");
+//        }
+//        else if(this.splitedHand!=null)
+//        {
+//            player.sendMessage("You can split only once!");
+//        }
+//        else if(this.hand.topCardsSame())
+//        {
+//            player.sendMessage("You need two same cards for split");
+//        }
+//        else if(this.round!=2)
+//        {
+//            player.sendMessage("You can split only in second round!");
+//        }
+//        else if(this.cash<(this.bet*2))
+//        {
+//            player.sendMessage("You don't have enough credit!");
+//        }
+//        else
+//        {
+//            player.sendMessage("You can't split now!");
+//        }
+//    }
+//    private int dealer(Player player, Packet packet, int playerScore, int playerCards)
+//    {
+//        Hand dealerHand=new Hand();
+//        int sum=0;
+//        this.dealerRound=0;
+//        while(sum < 21 && (sum < playerScore || sum <=17))
+//        {
+//            this.dealerRound++;
+//            dealerHand.addCard(packet.takeCard());
+//            sum=dealerHand.getCardSum();
+//            if(playerScore>21 && sum>=17 || playerScore<sum && sum>=17)break;
+//            if(playerScore==21&&playerCards<=this.dealerRound)break;
+//        }
+//        player.sendMessage("Dealer's points: "+dealerHand.getCardSum()+" ( "+dealerHand.showCards()+")");
+//        return sum;
+//    }
+//    public void doubleBet(Player player)
+//    {
 //        if(this.round==1){
 //            if(this.cash>=this.bet)
 //            {
@@ -249,19 +317,20 @@ public class GameAccount {
 //        {
 //            player.sendMessage("You can't double the bet!");
 //        }
-    }
+//    }
 
     @Override
     public String toString()
     {
         if(this.hand.getCountCards() > 0 && this.splitedHand.getCountCards() > 0)
         {
-            return "\nRuka 1 (sazka: " + this.bet + "), soucet: " + this.hand.getCardSum() + ", karty: " + this.hand.showCards()
-            + "\nRuka 2 (sazka: " + this.splitBet + "), soucet: " + this.splitedHand.getCardSum() + ", karty: " + this.splitedHand.showCards();
+            return "Tvuj stav"
+                + "\nRuka 1 (sazka: " + this.bet + "), soucet: " + this.hand.getCardSum() + ", karty: " + this.hand.showCards()
+                + "\nRuka 2 (sazka: " + this.splitBet + "), soucet: " + this.splitedHand.getCardSum() + ", karty: " + this.splitedHand.showCards();
         }
         else if(this.splitedHand.getCountCards() == 0)
         {
-            return "(sazka: " + this.bet +"), soucet: " + this.hand.getCardSum() + ", karty: " + this.hand.showCards();
+            return "Tva sazka: " + this.bet +", soucet: " + this.hand.getCardSum() + ", karty: " + this.hand.showCards();
         }
         return "nema karty";
     }

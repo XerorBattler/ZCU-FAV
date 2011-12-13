@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package blackjack;
 
 /**
@@ -10,9 +6,10 @@ package blackjack;
  */
 public class BankAccount {
     private int currentCash;
-    public BankAccount(int value)
+    private final int DEFAULTCASH = 1000;
+    public BankAccount()
     {
-        this.currentCash = value;
+        this.currentCash = DEFAULTCASH;
     }
     public boolean removeCash(int value)
     {

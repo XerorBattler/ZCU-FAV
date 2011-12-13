@@ -13,16 +13,11 @@ import java.util.Map;
  * @author Xeror
  */
 public class Bank {
-    private static final int DEFAULTCASH = 1000;
     
     private static Map<String, BankAccount> bankAccounts = new HashMap<String, BankAccount>();
     
     public static BankAccount getAccount(String name)
     {
-        if(!bankAccounts.containsKey(name))
-        {
-            bankAccounts.put(name, new BankAccount(DEFAULTCASH));
-        }
         return bankAccounts.get(name);
     }
     public static int getTotalCash()

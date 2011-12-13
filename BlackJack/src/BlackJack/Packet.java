@@ -73,6 +73,15 @@ public class Packet {
         String text="";
         for(int i=0;i<4;i++)
         {
+            String color;
+            if(i < 2)
+            {
+                color = "B";
+            }
+            else
+            {
+                color = "R";
+            }
             for(int j=0;j<13;j++)
             {
                 if(j<9)
@@ -101,7 +110,7 @@ public class Packet {
                         break;
                     }
                 }
-                this.packet.add(new Card(text, value));
+                this.packet.add(new Card(text, value, color));
             }
         }
         //Collections.shuffle(Arrays.asList(this.packet));

@@ -9,6 +9,8 @@ import java.util.Scanner;
 public class BlackJack
 {
 
+    private static Scanner scanner = new Scanner(System.in);
+    
     private int minBet=1;
     private int maxBet=10000;
     private int minBuyIn=10;
@@ -17,99 +19,27 @@ public class BlackJack
     private boolean shortCmdsAllow=false;
     private double blackJackRatio=1.5;
     
+    //staticke promenne
     private static ArrayList<Player> players = new ArrayList<Player>();
-    
-    private Packet packet;
-   
+    private static Packet packet;
     private static int activePlayer = 0;
+    private static Dealer dealer;
     
-    private boolean activeGame = false;
-    
-    private Dealer dealer;
-    
-    private Scanner scanner = new Scanner(System.in);
-    
-    public BlackJack()
+    public BlackJack(int playerCount)
     {
-    }
-    public void nextPlayer()
-    {
-        activePlayer++;
-        activePlayer %= players.size();
-        if(!players.get(activePlayer).getAccount().plays())nextPlayer();
-        else
+        String name;
+        for(int i = 0; i < playerCount; i++)
         {
-            run.log("Na rade je hrac " + players.get(activePlayer).getName());
-            run.log(players.get(activePlayer).getAccount().toString());
-            run.log("prikazy: \"hit\" \"hold\"");
+            msg("Zadejte jmeno hrace " +(i + 1) + ": ", true);
+            name = scanner.next();
+            this.createPlayer(name);
+            name = "";
         }
-    }
-    public boolean onCommand(String command)
-    {
-        String[] split=command.split(" ");
-        
-        if(split[0].equalsIgnoreCase("game") || split[0].equalsIgnoreCase("g"))
-        {
-            newGame();
-        }
-        else if(split[0].equalsIgnoreCase("hit") || split[0].equalsIgnoreCase("h"))
-        {
-            players.get(activePlayer).getAccount().hit(this.packet);
-            nextPlayer();
-        }
-        else if(split[0].equalsIgnoreCase("hold"))
-        {
-            players.get(activePlayer).getAccount().hold();
-            nextPlayer();
-            
-        }
-        else if(split[0].equalsIgnoreCase("status"))
-        {
-            status();
-        }
-        else if(split[0].equalsIgnoreCase("help"))
-        {
-            help();
-        }
-        else if(split[0].equalsIgnoreCase("q") || split[0].equalsIgnoreCase("quit"))
-        {
-            return false;
-        }
-        return true;
-    }        
-    private void help()
-    {
-        run.log("BlackJack napoveda:");
-        run.log("Pro zapoceti nove hry: \"game\"");
-        run.log("Pro dalsi kartu: \"hit\"");
-        run.log("Pro cekani: \"hold\"");
-        run.log("Pro stav hracskych uctu: \"status\"");
-        run.log("Pro zobrazeni teto napovedy: \"help\"");
-    }
-    public void status()
-    {
-        String ret = "Stav hracu:";
-        for(Player player : players)
-        {
-           ret += "\nHrac \"" + player.getName() + "\", aktivni hra: " +player.getAccount().plays() + ", konto: "+player.getBank().getCash(); 
-        }
-        run.log(ret);
-    }
-    private void newGame()
-    {
-        if(activeGame)
-        {
-            run.log("Jedna hra uz se hraje");
-        }
-        activeGame = true;
-        packet = new Packet();
-        dealer = new Dealer();
-        //michani karet
-        //dealer.shuffle();
-        //TODO
+        scanner.nextLine();
+        this.initGame();
         for(int i = 0; i < players.size(); i++)
         {
-            run.log(players.get(i).getName() + " zadej sazku");
+            msg(players.get(i).getName() + " zadej sazku: ", true);
             int bet;
             int cash;
             try
@@ -118,7 +48,7 @@ public class BlackJack
             }
             catch(Exception ex)
             {
-                run.log("Neplatna hodnota, automaticky sazim minimum");
+                msg("Neplatna hodnota, automaticky sazim minimum");
                 bet = minBet;
             }
             cash = players.get(i).getBank().getCash();
@@ -129,67 +59,280 @@ public class BlackJack
             }
             else
             {
-                run.log("Nemas dostatek kreditu! Sazim vse!");
+                msg("Nemas dostatek kreditu! Sazim vse!");
                 players.get(i).getBank().removeCash(cash);
                 players.get(i).getAccount().addBet(cash);
             }
         }
-        for(int i = 0; i < 2*players.size(); i++)
+        scanner.nextLine();
+        while(this.getCommand())
         {
-            Card card = packet.takeCard();
-            players.get(i%players.size()).getAccount().addCard(card);
-        }
-        dealer.addCard(packet.takeCard());
-        showAll();
-        activePlayer = 0;
-        run.log("Na rade je hrac " + players.get(activePlayer).getName());
-        run.log(players.get(activePlayer).getAccount().toString());
-        run.log("prikazy: \"hit\" \"hold\" \"double\"");
-        if(players.get(activePlayer).getAccount().canSplit())
-        {
-            run.log("Muzes sve karty rozdelit: \"split\"");
         }
     }
-    private void hit(Player player)
+    private boolean getCommand()
     {
-        nextCard(player);
-    }
-    private void nextCard(Player player)
-    {
-        Card card = this.packet.takeCard();
-        GameAccount account = player.getAccount();
-        account.addCard(card);
-    }
-    public void createPlayer(String name)
-    {
-        activePlayer = players.size();
-        players.add(new Player(name));
-        
-    }
-    private static Player getPlayer(String name)
-    {
-        Player foundPlayer = null;
-        for(int i = 0; i < players.size(); i++)
+        msg("*** NYNI JE NA RADE HRAC " + players.get(activePlayer).getName() + " ***");
+        if(this.noPlayersLeft())
         {
-            if(players.get(i).getName().equalsIgnoreCase(name))
+            msg("Konec hry");
+            this.calculateWinner();
+            return false;
+        }
+        if(players.get(activePlayer).getAccount().plays())
+        {
+            msg(players.get(activePlayer).getAccount().toString());
+            msg("cmd: ", true);
+            String command = scanner.nextLine();
+
+            String[] split = command.split(" ");
+
+            Player player = players.get(activePlayer);
+            GameAccount gameAccount = player.getAccount();
+
+            if(split[0].equalsIgnoreCase("hit") || split[0].equalsIgnoreCase("h"))
             {
-                foundPlayer = players.get(i);
+                gameAccount.hit();
+                this.nextPlayer();
+            }
+            else if(split[0].equalsIgnoreCase("hold") || split[0].equalsIgnoreCase("hd"))
+            {
+                gameAccount.hold();
+                this.nextPlayer();
+            }
+            else if(split[0].equalsIgnoreCase("double") || split[0].equalsIgnoreCase("db"))
+            {
+                gameAccount.doubleBet();
+                this.nextPlayer();
+            }
+            else if(split[0].equalsIgnoreCase("split") || split[0].equalsIgnoreCase("sp"))
+            {
+                gameAccount.split();
+                this.nextPlayer();
+            }
+            else if(split[0].equalsIgnoreCase("status"))
+            {
+                this.status();
+            }
+            else if(split[0].equalsIgnoreCase("q") || split[0].equalsIgnoreCase("quit"))
+            {
+                return false;
+            }
+            else if(split[0].equalsIgnoreCase("help"))
+            {
+                help();
+            }
+            else
+            {
+                help();
             }
         }
-        return foundPlayer;
+        return true;
+    }
+    private void nextPlayer()
+    {
+        activePlayer =(activePlayer + 1) % players.size();
     }
     public static Player getActivePlayer()
     {
         return players.get(activePlayer);
     }
-    public void showAll()
+    private boolean noPlayersLeft()
     {
-        run.log(dealer.toString());
+        boolean bool = true;
         for(Player player : players)
         {
-            run.log("Hrac " + player.toString());
+            if(player.getAccount().plays())
+            {
+                bool = false;
+            }
+        }
+        return bool;
+    }
+    public static Packet getPacket()
+    {
+        return packet;
+    }
+    public void showAll()
+    {
+        msg(dealer.toString());
+        for(Player player : players)
+        {
+            msg("Hrac " + player.toString());
         }
     }
+    private void createPlayer(String name)
+    {
+        players.add(new Player(name));
+    }
+    private void help()
+    {
+        msg("BlackJack napoveda:");
+        msg("Pro zapoceti nove hry: \"game\"");
+        msg("Pro dalsi kartu: \"hit\"");
+        msg("Pro cekani: \"hold\"");
+        msg("Pro stav hracskych uctu: \"status\"");
+        msg("Pro zobrazeni teto napovedy: \"help\"");
+        msg("Nize uvedene prikazy lze pouzit pouze v prvnim kole!");
+        msg("Pro zdvojnasobeni sazky: \"double\"");
+        msg("Pro rozdeleni stejnych karet: \"split\"");
+    }
+    public void status()
+    {
+        String ret = "Stav hracu:";
+        for(Player player : players)
+        {
+           ret += "\nHrac \"" + player.getName() + "\", aktivni hra: " +player.getAccount().plays() + ", konto: "+player.getBank().getCash(); 
+        }
+        msg(ret);
+    }
+    private void initGame()
+    {
+        msg("Pripravuji hru...");
+        packet = new Packet();
+        dealer = new Dealer();
+        for(Player player : players)
+        {
+            player.getAccount().addCard(packet.takeCard());
+            player.getAccount().addCard(packet.takeCard());
+        }
+        dealer.addCard(packet.takeCard());
+    }
+    //zpravy vsem
+    public static void msg(int numberInText)
+    {
+        msg(numberInText, false);
+    }
+    public static void msg(int numberInText, boolean noNewLine)
+    {
+        msg(String.valueOf(numberInText), noNewLine);
+    }
+    public static void msg(String text)
+    {
+        msg(text, false);
+    }
+    public static void msg(String text, boolean noNewLine)
+    {
+        if(noNewLine)
+        {
+            System.out.print(text);
+        }
+        else
+        {
+            System.out.println(text);
+        }
+    }
+    private void calculateWinner()
+    {
+        msg("Vyhodnoceni: ");
+    }
+//    public boolean onCommand(String command)
+//    {
+//        String[] split=command.split(" ");
+//        
+//        if(split[0].equalsIgnoreCase("hit") || split[0].equalsIgnoreCase("h"))
+//        {
+//            players.get(activePlayer).getAccount().hit(this.packet);
+//        }
+//        else if(split[0].equalsIgnoreCase("hold"))
+//        {
+//            players.get(activePlayer).getAccount().hold();
+//        }
+//        else if(split[0].equalsIgnoreCase("status"))
+//        {
+//            status();
+//        }
+//        else if(split[0].equalsIgnoreCase("help"))
+//        {
+//            help();
+//        }
+//        else if(split[0].equalsIgnoreCase("q") || split[0].equalsIgnoreCase("quit"))
+//        {
+//            return false;
+//        }
+//        else
+//        {
+//            help();
+//        }
+//        return true;
+//    }        
+//    private void newGame()
+//    {
+//        if(activeGame)
+//        {
+//            msg("Jedna hra uz se hraje");
+//        }
+//        activeGame = true;
+//        packet = new Packet();
+//        dealer = new Dealer();
+//        //michani karet
+//        //dealer.shuffle();
+//        //TODO
+//        for(int i = 0; i < players.size(); i++)
+//        {
+//            msg(players.get(i).getName() + " zadej sazku");
+//            int bet;
+//            int cash;
+//            try
+//            {
+//                bet = Integer.valueOf(scanner.next());
+//            }
+//            catch(Exception ex)
+//            {
+//                msg("Neplatna hodnota, automaticky sazim minimum");
+//                bet = minBet;
+//            }
+//            cash = players.get(i).getBank().getCash();
+//            if(bet <= cash)
+//            {
+//                players.get(i).getBank().removeCash(bet);
+//                players.get(i).getAccount().addBet(bet);
+//            }
+//            else
+//            {
+//                msg("Nemas dostatek kreditu! Sazim vse!");
+//                players.get(i).getBank().removeCash(cash);
+//                players.get(i).getAccount().addBet(cash);
+//            }
+//        }
+//        for(int i = 0; i < 2*players.size(); i++)
+//        {
+//            Card card = packet.takeCard();
+//            players.get(i%players.size()).getAccount().addCard(card);
+//        }
+//        dealer.addCard(packet.takeCard());
+//        showAll();
+//        activePlayer = 0;
+//        msg("Na rade je hrac " + players.get(activePlayer).getName());
+//        msg(players.get(activePlayer).getAccount().toString());
+//        msg("prikazy: \"hit\" \"hold\" \"double\"");
+//        if(players.get(activePlayer).getAccount().canSplit())
+//        {
+//            msg("Muzes sve karty rozdelit: \"split\"");
+//        }
+//    }
+//    private void hit(Player player)
+//    {
+//        nextCard(player);
+//    }
+//    private void nextCard(Player player)
+//    {
+//        Card card = this.packet.takeCard();
+//        GameAccount account = player.getAccount();
+//        account.addCard(card);
+//    }
+//    private static Player getPlayer(String name)
+//    {
+//        Player foundPlayer = null;
+//        for(int i = 0; i < players.size(); i++)
+//        {
+//            if(players.get(i).getName().equalsIgnoreCase(name))
+//            {
+//                foundPlayer = players.get(i);
+//            }
+//        }
+//        return foundPlayer;
+//    }
+
         //debug log
         //log.info("[BlackJack] "+player.getName()+" used command: "+Arrays.toString(split));
 //                    if(INSTANCE.shortCmdsAllow && split[0].equalsIgnoreCase("hit"))
