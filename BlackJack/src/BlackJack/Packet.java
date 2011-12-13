@@ -1,5 +1,7 @@
 package blackjack;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 /**
@@ -113,9 +115,12 @@ public class Packet {
                 this.packet.add(new Card(text, value, color));
             }
         }
-        //Collections.shuffle(Arrays.asList(this.packet));
-        //Collections.shuffle(Arrays.asList(this.packet));
+        this.shuffle();
     }
-    
+    private void shuffle()
+    {
+        Collections.shuffle(this.packet);
+        Collections.shuffle(this.packet);
+    }
     
 }

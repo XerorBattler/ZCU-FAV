@@ -95,7 +95,7 @@ public class Hand {
     {
         if(hand.size() == 2)
         {
-            if(hand.get(0).getName().equalsIgnoreCase(hand.get(1).getName()))
+            if(hand.get(0).getValue() == hand.get(1).getValue())
             {
                 return true;
             }
